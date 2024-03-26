@@ -13,6 +13,6 @@ However, since the lab environment should be a X86 architecture, I have to build
 - install c/c++ compile tool: `sudo apt-get install build-essential` `sudo apt-get install gcc-multilib`
 - gdb: `sudo apt-get install gdb`
 
-Reference: https://blog.handsomesnail.com/list/1593757406.html, I'm sorry that this reference is in Chinese. If you need help with the environment setting after translate the reference website, please leave me an issue. 
+Reference: https://blog.handsomesnail.com/list/1593757406.html, I'm sorry that this reference is in Chinese. If you still need help with the environment setting after translating the reference website, please leave me an issue.
 
 More information you may need: [Docker](https://www.docker.com/get-started/), [CSAPP labs](https://csapp.cs.cmu.edu/3e/labs.html).
