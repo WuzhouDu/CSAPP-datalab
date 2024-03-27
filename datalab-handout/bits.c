@@ -288,23 +288,24 @@ int logicalNeg(int x)
  */
 int howManyBits(int x)
 {
+  int bit16, bit8, bit4, bit2, bit1, bit0;
   // first check the sign of x.
   int sign = x >> 31;
   // if x is negative, we need to convert it to positive.
   x = (sign & ~x) | (~sign & x);
 
   // then we can use binary search to find the first 1.
-  int bit16 = !!(x >> 16) << 4;
+  bit16 = !!(x >> 16) << 4;
   x = x >> bit16;
-  int bit8 = !!(x >> 8) << 3;
+  bit8 = !!(x >> 8) << 3;
   x = x >> bit8;
-  int bit4 = !!(x >> 4) << 2;
+  bit4 = !!(x >> 4) << 2;
   x = x >> bit4;
-  int bit2 = !!(x >> 2) << 1;
+  bit2 = !!(x >> 2) << 1;
   x = x >> bit2;
-  int bit1 = !!(x >> 1);
+  bit1 = !!(x >> 1);
   x = x >> bit1;
-  int bit0 = x;
+  bit0 = x;
   return bit16 + bit8 + bit4 + bit2 + bit1 + bit0 + 1;
 }
 // float
@@ -321,7 +322,31 @@ int howManyBits(int x)
  */
 unsigned floatScale2(unsigned uf)
 {
-  return 2;
+  // first check the exp and frac.
+  unsigned exp = (uf >> 23) & 0xFF;
+  unsigned frac = uf & 0x7FFFFF;
+  unsigned char sign = uf >> 31;
+
+  // if exp is 0xFF, it's NaN or infinity.
+  if (exp == 0xFF)
+  {
+    return uf;
+  }
+
+  // if exp is 0, it's denorm.
+  if (exp == 0) {
+    frac <<= 1;
+    return (sign << 31) | (exp << 23) | frac;
+  }
+
+  // it's norm.
+  else {
+    exp++;
+    if (exp == 0xFF) {
+      frac = 0;
+    }
+    return (sign << 31) | (exp << 23) | frac;
+  }
 }
 /*
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -337,7 +362,48 @@ unsigned floatScale2(unsigned uf)
  */
 int floatFloat2Int(unsigned uf)
 {
-  return 2;
+  // first check the exp and frac.
+  unsigned exp = (uf >> 23) & 0xFF;
+  unsigned frac = uf & 0x7FFFFF;
+  unsigned char sign = uf >> 31;
+
+  // if exp is 0xFF, it's NaN or infinity.
+  if (exp == 0xFF)
+  {
+    return 0x80000000u;
+  }
+
+  // if exp is 0, it's denorm.
+  if (exp == 0) {
+    return 0;
+  }
+
+  // it's norm.
+  else {
+    int E = exp - 127;
+    if (E < 0) {
+      return 0;
+    }
+    else if (E > 31) {
+      return 0x80000000u;
+    }
+    else {
+      // add the additional 1 in norm fraction.
+      frac = frac | 0x800000;
+      if (E > 23) {
+        frac <<= (E - 23);
+      }
+      else {
+        frac >>= (23 - E);
+      }
+      if (sign) {
+        return ~frac + 1;
+      }
+      else {
+        return frac;
+      }
+    }
+  }
 }
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -354,5 +420,11 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-  return 2;
+  if (x < -126) {
+    return 0;
+  }
+  if (x > 127) {
+    return 0x7F800000;
+  }
+  return (x + 127) << 23;
 }
